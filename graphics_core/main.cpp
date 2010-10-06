@@ -1,6 +1,9 @@
 #include <windows.h>
+#include "scenemanager.h"
 
 #define WIN32_LEAN_AND_MEAN
+
+SceneManager* g_pscene = 0;
 
 LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -26,6 +29,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	HWND hwnd;
 	MSG msg;
 
+	g_pscene = new SceneManager;
+
 	wc.cbClsExtra = 0;
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.cbWndExtra = 0;
@@ -41,6 +46,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if(!RegisterClassEx(&wc))
 	{
+		g_pscene->Close();
+		delete g_pscene;
+		g_pscene = 0;
 		return 0;
 	}
 
@@ -60,6 +68,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if(hwnd == NULL)
 	{
+		g_pscene->Close();
+		delete g_pscene;
+		g_pscene = 0;
+		return 0;
+	}
+
+	//after check init the scene
+	if(!g_pscene->InitScene(hwnd, 1200, 840))
+	{
+		MessageBox(NULL, L"Scene start failed", L"Graphic Error", MB_OK);
+		g_pscene->Close();
+		delete g_pscene;
+		g_pscene = 0;
 		return 0;
 	}
 
@@ -76,8 +97,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+		else
+			g_pscene->Render();
 	}
 	
+	g_pscene->Close();
+	delete g_pscene;
+	g_pscene = 0;
 	UnregisterClass(L"graphc_core_class", hInstance);
 
 	return 0;						
